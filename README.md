@@ -1,9 +1,6 @@
 # Phase-Aware Adaptive Last-Level Cache (LLC) Replacement Framework
-
-**Course:** BEVD207L - Computer Architecture (IEEE Simulation-Based Digital Assignment, VIT Chennai)  
-**Authors:**  
-- **S M Kousika** (24BVD1034)  
-- **Kavya Raja G** (24BVD1099)  
+  
+- **S M Kousika** 
 
 ---
 
@@ -43,7 +40,9 @@ tl/) with Cadence Genus synthesis script constrained at 2.0 GHz ($<45$ NAND2 equ
 ---
 
 ### Workload B: Multi-Phase Dynamic Transition Benchmark
-*Stress-test alternating across Phase 1 (1.2MB Recency Loop) $ightarrow$ Phase 2 (16MB Streaming Scan) $ightarrow$ Phase 3 (32MB Pointer Chase).*
+*Stress-test alternating across Phase 1 (1.2MB Recency Loop) $
+ightarrow$ Phase 2 (16MB Streaming Scan) $
+ightarrow$ Phase 3 (32MB Pointer Chase).*
 
 | Policy | Epoch Length | IPC | LLC Hit Rate (%) | LLC Hits | LLC MPKI | Switches | Mode Breakdown |
 |---|---|---|---|---|---|---|---|
