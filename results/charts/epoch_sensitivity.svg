@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 420" width="700" height="420" style="background:#0d1117; font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Roboto,sans-serif;">
+  <text x="350" y="35" fill="#f0f6fc" font-size="18" font-weight="bold" text-anchor="middle">PA-RRIP Epoch Sensitivity &amp; Hysteresis Stability</text>
+  <text x="350" y="58" fill="#8b949e" font-size="12" text-anchor="middle">IPC vs. Configured Epoch Window (Cycles) | Optimal at 10,000 Cycles</text>
+  
+  <line x1="80" y1="320" x2="650" y2="320" stroke="#30363d" stroke-width="1"/>
+  <line x1="80" y1="250" x2="650" y2="250" stroke="#21262d" stroke-dasharray="4"/>
+  <line x1="80" y1="180" x2="650" y2="180" stroke="#21262d" stroke-dasharray="4"/>
+  <line x1="80" y1="110" x2="650" y2="110" stroke="#21262d" stroke-dasharray="4"/>
+  
+  <text x="70" y="324" fill="#8b949e" font-size="11" text-anchor="end">0.270</text>
+  <text x="70" y="254" fill="#8b949e" font-size="11" text-anchor="end">0.275</text>
+  <text x="70" y="184" fill="#8b949e" font-size="11" text-anchor="end">0.280</text>
+  <text x="70" y="114" fill="#8b949e" font-size="11" text-anchor="end">0.285</text>
+
+  <line x1="80" y1="310" x2="650" y2="310" stroke="#484f58" stroke-width="1.5" stroke-dasharray="6"/>
+  <text x="655" y="314" fill="#8b949e" font-size="10">LRU (0.2707)</text>
+
+  <line x1="80" y1="261" x2="650" y2="261" stroke="#238636" stroke-width="1.5" stroke-dasharray="6"/>
+  <text x="655" y="265" fill="#3fb950" font-size="10">SRRIP (0.2742)</text>
+
+  <polyline points="160,169 360,163 560,166" fill="none" stroke="#00e5ff" stroke-width="3"/>
+  
+  <circle cx="160" cy="169" r="6" fill="#00e5ff" stroke="#0d1117" stroke-width="2"/>
+  <text x="160" y="150" fill="#00e5ff" font-size="12" font-weight="bold" text-anchor="middle">0.2808</text>
+  <text x="160" y="345" fill="#c9d1d9" font-size="12" font-weight="600" text-anchor="middle">5,000 cyc</text>
+  <text x="160" y="362" fill="#8b949e" font-size="10" text-anchor="middle">BRRIP: 97.9%</text>
+
+  <circle cx="360" cy="163" r="8" fill="#ffb300" stroke="#0d1117" stroke-width="2"/>
+  <text x="360" y="140" fill="#ffb300" font-size="13" font-weight="bold" text-anchor="middle">0.2812 (Optimal)</text>
+  <text x="360" y="345" fill="#ffb300" font-size="12" font-weight="bold" text-anchor="middle">10,000 cyc</text>
+  <text x="360" y="362" fill="#ffb300" font-size="10" text-anchor="middle">BRRIP: 95.8%</text>
+
+  <circle cx="560" cy="166" r="6" fill="#00e5ff" stroke="#0d1117" stroke-width="2"/>
+  <text x="560" y="150" fill="#00e5ff" font-size="12" font-weight="bold" text-anchor="middle">0.2810</text>
+  <text x="560" y="345" fill="#c9d1d9" font-size="12" font-weight="600" text-anchor="middle">20,000 cyc</text>
+  <text x="560" y="362" fill="#8b949e" font-size="10" text-anchor="middle">BRRIP: 91.7%</text>
+</svg>
