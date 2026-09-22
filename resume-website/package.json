@@ -1,0 +1,10 @@
+{
+  "name": "kousika-silicon-resume",
+  "version": "1.0.0",
+  "description": "Interactive Silicon Engineering & Design Verification Resume of Kousika S M",
+  "scripts": {
+    "deploy": "vercel --prod"
+  },
+  "keywords": ["silicon", "resume", "verilog", "systemverilog", "vlsi"],
+  "author": "Kousika S M"
+}
