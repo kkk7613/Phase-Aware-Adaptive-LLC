@@ -1,89 +1,80 @@
-# ChampSim
+# Phase-Aware Adaptive Last-Level Cache (LLC) Replacement Framework
 
-![GitHub](https://img.shields.io/github/license/ChampSim/ChampSim)
-![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/ChampSim/ChampSim/test.yml)
-![GitHub forks](https://img.shields.io/github/forks/ChampSim/ChampSim)
-[![Coverage Status](https://coveralls.io/repos/github/ChampSim/ChampSim/badge.svg?branch=develop)](https://coveralls.io/github/ChampSim/ChampSim?branch=develop)
+**Course:** BEVD207L - Computer Architecture (IEEE Simulation-Based Digital Assignment, VIT Chennai)  
+**Authors:**  
+- **S M Kousika** (24BVD1034)  
+- **Kavya Raja G** (24BVD1099)  
 
-ChampSim is a trace-based simulator for a microarchitecture study. If you have questions about how to use ChampSim, we encourage you to search the threads in the Discussions tab or start your own thread. If you are aware of a bug or have a feature request, open a new Issue.
+---
 
-# Using ChampSim
+## 1. Overview & Key Contributions
 
-ChampSim is the result of academic research. If you use this software in your work, please cite it using the following reference:
+Modern memory workloads exhibit dynamic phase shifts between **streaming scans**, **temporal recency loops**, and **thrashing pointer-chasing**. Static cache replacement policies (LRU, SRRIP) and set-dueling policies (DRRIP) suffer from either single-policy rigidity, set-pollution overhead, or slow reaction lag.
 
-    Gober, N., Chacon, G., Wang, L., Gratz, P. V., Jimenez, D. A., Teran, E., Pugsley, S., & Kim, J. (2022). The Championship Simulator: Architectural Simulation for Education and Competition. https://doi.org/10.48550/arXiv.2210.14324
+This repository implements a **Phase-Aware Adaptive LLC Replacement (PA-RRIP)** framework comprising:
+1. **Background Phase Monitor:** Continuously tracks 5 hardware-friendly runtime signatures (Miss Intensity, Stride Regularity, Spatial Locality, Short-Reuse Ratio, and Access Frequency) across epoch windows.
+2. **Unified 2-bit RRPV Engine:** Dynamically steers cache insertions into one of three operating modes without any per-line storage overhead:
+   - **Mode 0 (SRRIP):** Scan/Streaming resistance (=2$).
+   - **Mode 1 (LRU-Approximated):** Recency protection (=0$).
+   - **Mode 2 (BRRIP):** Thrashing resistance (=3$ with /32$ probability of =2$).
+3. **Anti-Flapping Hysteresis Filter:** Employs a 2-bit saturating counter requiring 2 consecutive confirming epochs before triggering a policy switch, completely eliminating ping-pong instability.
+4. **Zero-Migration Switching:** Mode transitions take effect immediately on subsequent fills without flushing or invalidating existing cache lines.
+5. **Synthesizable SystemVerilog RTL:** Complete, verified RTL suite (
+tl/) with Cadence Genus synthesis script constrained at 2.0 GHz ($<45$ NAND2 equivalent gates).
 
-If you use ChampSim in your work, you may submit a pull request modifying `PUBLICATIONS_USING_CHAMPSIM.bib` to have it featured in [the documentation](https://champsim.github.io/ChampSim/master/Publications-using-champsim.html).
+---
 
-# Download dependencies
+## 2. Experimental Results
 
-ChampSim uses [vcpkg](https://vcpkg.io) to manage its dependencies. In this repository, vcpkg is included as a submodule. You can download the dependencies with
-```
-git submodule update --init
-vcpkg/bootstrap-vcpkg.sh
-vcpkg/vcpkg install
-```
+### Workload A: Single-Phase Thrashing (SPEC CPU2017 605.mcf_s-472B)
+*Configuration: 2MB 16-Way Shared LLC, 1-core OOO CPU @ 4.0 GHz, DRAM 3200 MT/s, 1M Warmup + 2M Sim*
 
-# Compile
+| Replacement Policy | IPC | LLC Hit Rate (%) | LLC MPKI | Avg Miss Latency (cyc) | Speedup vs LRU (%) | Dominant Mode |
+|---|---|---|---|---|---|---|
+| **LRU (Static Baseline)** | 0.2707 | 10.06% | 38.04 | 205.9 | — | N/A (Fixed) |
+| **SRRIP (Static Baseline)** | 0.2742 | 6.36% | 39.60 | 193.8 | +1.29% | N/A (Fixed) |
+| **DRRIP (Set-Dueling Baseline)**| 0.2713 | 9.59% | 38.24 | 203.9 | +0.22% | N/A (Fixed) |
+| **PA-RRIP (Epoch = 5,000 cyc)** | 0.2808 | 7.60% | 39.08 | 193.5 | +3.73% | BRRIP (97.9%) |
+| **PA-RRIP (Epoch = 10,000 cyc)**| **0.2812** | **7.62%** | **39.07** | **193.3** | **+3.88%** | **BRRIP (95.8%)** |
+| **PA-RRIP (Epoch = 20,000 cyc)**| 0.2810 | 7.60% | 39.08 | 193.4 | +3.80% | BRRIP (91.7%) |
 
-ChampSim takes a JSON configuration script. Examine `champsim_config.json` for a fully-specified example. All options described in this file are optional and will be replaced with defaults if not specified. The configuration scrip can also be run without input, in which case an empty file is assumed.
-```
-$ ./config.sh <configuration file>
-$ make
-```
+> **Key Finding:** On sustained thrashing, PA-RRIP outperforms DRRIP by **+3.65%** (.2812$ vs .2713$) because PA-RRIP operates across 100% of cache sets without dedicated set-dueling pollution.
 
-# Download DPC-3 trace
+---
 
-Traces used for the 3rd Data Prefetching Championship (DPC-3) can be found here. (https://dpc3.compas.cs.stonybrook.edu/champsim-traces/speccpu/) A set of traces used for the 2nd Cache Replacement Championship (CRC-2) can be found from this link. (http://bit.ly/2t2nkUj)
+### Workload B: Multi-Phase Dynamic Transition Benchmark
+*Stress-test alternating across Phase 1 (1.2MB Recency Loop) $ightarrow$ Phase 2 (16MB Streaming Scan) $ightarrow$ Phase 3 (32MB Pointer Chase).*
 
-Storage for these traces is kindly provided by Daniel Jimenez (Texas A&M University) and Mike Ferdman (Stony Brook University). If you find yourself frequently using ChampSim, it is highly encouraged that you maintain your own repository of traces, in case the links ever break.
+| Policy | Epoch Length | IPC | LLC Hit Rate (%) | LLC Hits | LLC MPKI | Switches | Mode Breakdown |
+|---|---|---|---|---|---|---|---|
+| **LRU (Static Baseline)** | — | 0.1510 | 21.52% | 414,158 | 397.34 | 0 | Fixed (Mode 1) |
+| **SRRIP (Static Baseline)** | — | 0.1515 | 22.14% | 425,975 | 394.30 | 0 | Fixed (Mode 0) |
+| **PA-RRIP (Epoch 2.5k)** | 2,500 cyc | 0.1518 | 21.88% | 421,005 | 395.48 | 3 | SRRIP 45.3% / LRU 9.6% / BRRIP 45.2% |
+| **PA-RRIP (Epoch 10k)** | 10,000 cyc | 0.1526 | 22.34% | 429,856 | 393.32 | 3 | SRRIP 45.5% / LRU 9.8% / BRRIP 44.7% |
+| **DRRIP (Set-Dueling)** | Continuous | **0.1529** | **23.07%** | **444,065** | **389.59** | Continuous | Dynamic Duel |
 
-# Run simulation
+> **Architectural Trade-Off Finding:**  
+> - Continuous set-dueling (DRRIP) excels at abrupt cliff-edge phase boundaries due to cycle-by-cycle PSEL feedback.  
+> - Periodic classification (PA-RRIP) avoids set-pollution penalties on steady-state phases and covers three policies (including LRU for working sets), with 	ext{k}$ cycles identified as the optimal balance between sampling stability and phase responsiveness.
 
-Execute the binary directly.
-```
-$ bin/champsim --warmup-instructions 200000000 --simulation-instructions 500000000 ~/path/to/traces/600.perlbench_s-210B.champsimtrace.xz
-```
+---
 
-The number of warmup and simulation instructions given will be the number of instructions retired. Note that the statistics printed at the end of the simulation include only the simulation phase.
+## 3. Directory Structure
 
-# Add your own branch predictor, data prefetchers, and replacement policy
-**Copy an empty template**
-```
-$ mkdir prefetcher/mypref
-$ cp prefetcher/no_l2c/no.cc prefetcher/mypref/mypref.cc
-```
 
-**Work on your algorithms with your favorite text editor**
-```
-$ vim prefetcher/mypref/mypref.cc
-```
 
-**Compile and test**
-Add your prefetcher to the configuration file.
-```
-{
-    "L2C": {
-        "prefetcher": "mypref"
-    }
-}
-```
-Note that the example prefetcher is an L2 prefetcher. You might design a prefetcher for a different level.
+---
 
-```
-$ ./config.sh <configuration file>
-$ make
-$ bin/champsim --warmup-instructions 200000000 --simulation-instructions 500000000 600.perlbench_s-210B.champsimtrace.xz
-```
+## 4. How to Build & Run
 
-# How to create traces
+### 1. Build ChampSim with PA-RRIP
 
-Program traces are available in a variety of locations, however, many ChampSim users wish to trace their own programs for research purposes.
-Example tracing utilities are provided in the `tracer/` directory.
 
-# Evaluate Simulation
+### 2. Run Single-Phase MCF Benchmark Sweep
 
-ChampSim measures the IPC (Instruction Per Cycle) value as a performance metric. <br>
-There are some other useful metrics printed out at the end of simulation. <br>
 
-Good luck and be a champion! <br>
+### 3. Generate & Run Dynamic Multi-Phase Benchmark
+
+
+### 4. Train & Extract Decision Tree Rules
+
